@@ -7,6 +7,19 @@ import { ChefHat, Sparkles, Clock, Users, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-cooking.jpg";
 
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: {
+        ready(): void;
+        expand(): void;
+        close(): void;
+        sendData(data: string): void;
+      };
+    };
+  }
+}
+
 const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,6 +30,31 @@ const Index = () => {
       toast.success(location.state.message);
     }
   }, [location.state]);
+
+  // Инициализация Telegram WebApp
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+      
+      // Получение параметров из URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const query = urlParams.get('query');
+      if (query) {
+        // Автоматический поиск по запросу из бота
+        handleSearch(query);
+      }
+    }
+  }, []);
+
+  // Отправка данных обратно в бот
+  const sendToBot = (data: any) => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.sendData(JSON.stringify(data));
+      window.Telegram.WebApp.close();
+    }
+  };
 
   const handleSearch = async (query: string) => {
     setLoading(true);
